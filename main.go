@@ -19,19 +19,10 @@ func init() {
 }
 
 func main() {
-	stop := make(chan os.Signal)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
 
-	errors := make(chan error, 1)
-	go func() {
-		errors <- bpf.Start(ctx)
-	}()
-
-	<-stop
-	cancel()
-
-	if err := <-errors; err != nil {
+	if err := bpf.Start(ctx); err != nil {
 		log.Fatalf("error linking BPF program: %v", err)
 	}
 }
