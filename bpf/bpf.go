@@ -135,7 +135,13 @@ func runTCPServer(ctx context.Context, objs *bpfObjects, port int) error {
 func handleConn(ctx context.Context, conn net.Conn, objs *bpfObjects) {
 	defer conn.Close()
 
-	file, err := conn.(*net.TCPConn).File()
+	tcpconn := conn.(*net.TCPConn)
+	localaddr := tcpconn.LocalAddr().(*net.TCPAddr)
+	remoteaddr := tcpconn.RemoteAddr().(*net.TCPAddr)
+
+	fmt.Printf("connection: %s:%d -> %s:%d\n", remoteaddr.IP.String(), remoteaddr.Port, localaddr.IP.String(), localaddr.Port)
+
+	file, err := tcpconn.File()
 	if err != nil {
 		fmt.Println("error getting socket fd", err)
 		return
